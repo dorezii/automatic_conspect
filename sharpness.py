@@ -217,27 +217,3 @@ def select_keyframes(
         cv2.imwrite(path, k.frame_bgr, [int(cv2.IMWRITE_JPEG_QUALITY), 92])
         saved.append((k.t, path))
     return saved
-
-# --- Параметры ---
-
-video = 'ffmpeg'
-# "C:\Users\dondu\Downloads\ML.mp4"
-# frames_dir = 'math'
-
-out_dir = "keyframes"
-
-# Если у тебя уже есть детектор ROI слайда (по ключевым точкам), подставь bbox:
-# roi = (x1, y1, x2, y2)
-roi = None
-
-keyframes = select_keyframes(
-    video_path=video,
-    out_dir=out_dir,
-    sample_fps=1.0,
-    roi=roi,
-    change_thr=0.72,
-    max_hamming=6
-)
-
-print("Saved:", len(keyframes))
-print(keyframes[:5])
