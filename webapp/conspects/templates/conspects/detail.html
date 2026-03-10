@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>{{ item.title }}</h2>
+<p>Посещений: {{ item.visits }} | Скачиваний: {{ item.downloads }}</p>
+<p><a href="/summary/{{ item.id }}/download/">Скачать .txt</a></p>
+<pre>{{ item.summary_text }}</pre>
+
+{% if user.is_authenticated %}
+<h3>Оценить качество (1-5)</h3>
+<form method="post">{% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Сохранить отзыв</button>
+</form>
+{% else %}
+<p>Чтобы оставить отзыв, войдите в аккаунт.</p>
+{% endif %}
+{% endblock %}

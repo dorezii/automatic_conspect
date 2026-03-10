@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Загрузка видео</h2>
+<p>Лимит: 1 конспект в день на пользователя.</p>
+<form method="post" enctype="multipart/form-data">{% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Отправить на обработку</button>
+</form>
+{% endblock %}

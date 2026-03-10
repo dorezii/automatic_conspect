@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Личный кабинет</h2>
+<p>Ваши конспекты:</p>
+<ul>
+{% for item in items %}
+  <li>
+    <a href="/summary/{{ item.id }}/">{{ item.title }}</a>
+    — {{ item.created_at }}
+    — email: {{ item.email_sent }}
+    — рейтинг: {{ item.avg_rating|default:'нет' }}
+  </li>
+{% empty %}
+  <li>Пока нет конспектов</li>
+{% endfor %}
+</ul>
+{% endblock %}

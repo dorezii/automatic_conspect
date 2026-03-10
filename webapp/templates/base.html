@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <title>Automatic Conspect</title>
+</head>
+<body>
+  <nav>
+    <a href="/">Публичные конспекты</a> |
+    {% if user.is_authenticated %}
+      <a href="/dashboard/">Личный кабинет</a> |
+      <a href="/upload/">Загрузить видео</a> |
+      <form style="display:inline" method="post" action="/accounts/logout/">{% csrf_token %}<button type="submit">Выйти</button></form>
+    {% else %}
+      <a href="/accounts/login/">Вход</a> |
+      <a href="/signup/">Регистрация</a>
+    {% endif %}
+  </nav>
+  {% if messages %}
+    <ul>
+      {% for message in messages %}<li>{{ message }}</li>{% endfor %}
+    </ul>
+  {% endif %}
+  {% block content %}{% endblock %}
+</body>
+</html>

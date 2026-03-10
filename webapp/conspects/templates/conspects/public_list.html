@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Публичные конспекты</h2>
+<ul>
+{% for item in items %}
+  <li>
+    <a href="/summary/{{ item.id }}/">{{ item.title }}</a>
+    — посещений: {{ item.visits }}
+    — скачиваний: {{ item.downloads }}
+    — рейтинг: {{ item.avg_rating|default:'нет' }}
+  </li>
+{% empty %}
+  <li>Пока конспектов нет</li>
+{% endfor %}
+</ul>
+{% endblock %}
