@@ -1,125 +1,93 @@
-# -*- coding: utf-8
-# import os.path
-#
-# import audio
-# from text import Text
-# from os import path
-# from PyQt6.QtCore import QRunnable
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import cv2
+from PyQt6.QtCore import QRunnable
 from faster_whisper import WhisperModel
-import  time
 
-model = WhisperModel("small", device="cuda", compute_type="float16")
-start_time = time.time()
-segments, info = model.transcribe('C:\\Users\\dondu\\Downloads\\math.wav', beam_size=5)
-print(time.time() -start_time)
+import audio
+from OCR import run_ocr
+from LLMsummary import save_summary, summarize_with_llm
+from keyPoints import detect_keypoints_for_images
+from sharpness import select_keyframes
 
-print(info.language, info.language_probability)
-with open('C:\\Users\\dondu\\Downloads\\math.txt', "w",  encoding='utf-8') as file:
-    for s in segments:
-        print(f"[{s.start:.2f} -> {s.end:.2f}] {s.text}")
-        file.write(f"[{s.start:.2f} -> {s.end:.2f}] {s.text}")
-print(time.time() -start_time)
 
-# class Main(QRunnable):
-#     def __init__(self, signal, link, set_videoname_signal, print_signal):
-#         super().__init__()
-#         self.signals = signal
-#         self.video = set_videoname_signal
-#         self.print_signal = print_signal
-#         self.link = link.strip('"')
-#
-#     def run(self):
-#         file = ''
-#         # если на компьютере нет такой директории link
-#         if path.exists(path.dirname(self.link)):
-#             try:
-#                 filename = self.link[self.link.rindex('\\') + 1:]
-#                 print(filename)
-#                 duration = audio.get_length(self.link)
-#                 chapters = []
-#                 dict = {}
-#                 if (os.path.isfile(filename[:filename.rindex('.')] + '\\chapters.txt')):
-#                     with open(filename[:filename.rindex('.')] + '\\chapters.txt', 'r', encoding='utf-8') as f:
-#                         s = f.readline()
-#                         dict['start_time'], dict['title'], dict['end_time'] = s.split('\t')
-#                         chapters.append(dict)
-#                 audio.convert_video_to_audio_ffmpeg(self.link)
-#                 file = audio.AudioFile(filename, duration, chapters, False, self.link)
-#             except Exception as e:
-#                 print(e)
-#                 self.signals.result.emit("Ошибка: убедитесь, что файл доступен")
-#                 self.print_signal.result.emit(str(e))
-#         else:
-#             self.signals.result.emit("Статус: Скачивание видео")
-#             isThere = False
-#             filename, duration, chapters = audio.download_audio(self.link)
-#             print(chapters)
-#             self.signals.result.emit("Статус: Скачивание видео завершено")
-#             file = audio.AudioFile(filename, duration, chapters, isThere)
-#
-#         if isinstance(file, audio.AudioFile):
-#             self.video.result.emit(file.filename[:file.filename.rindex('.')])
-#             self.process_file(file)
-#
-#     def process_file(self, file):
-#         start = file.duration // 10 // 60
-#         current_dir = path.dirname(path.realpath(__file__))
-#         dest_folder = path.join(current_dir, file.folder_name)
-#         cut = str(dest_folder + 'cut.wav')
-#         audio.split_video(file.folder_name + file.filename, start, start, cut)
-#         model = whisper.load_model("small", in_memory=True)
-#         cut = whisper.load_audio(cut)
-#         cut = whisper.pad_or_trim(cut)
-#         mel = whisper.log_mel_spectrogram(cut).to(model.device)
-#         _, probs = model.detect_language(mel)
-#
-#         output = sorted(probs.items(), key=lambda x: x[1], reverse=True)
-#         print("Вероятности появления различных языков:", output)
-#         lang = output[0]
-#         print("Язык - ", lang)
-#         # если есть неопределенность в языке
-#         if output[1][1] > 0.2 or lang[0] != 'ru':
-#             print(output[1])
-#             self.print_signal.result.emit("Поддержка других языков недоступна")
-#             return
-#         if not (path.isfile(file.folder_name+file.filename[:file.filename.rindex('.')] + '.txt')):
-#             try:
-#                 # file.recognizeSpeech([file.folder_name + file.filename])
-#                 self.signals.result.emit('Статус: идет распознавание речи, пожалуйста, подождите')
-#                 file.recognizePywhisper_cpp()
-#             except Exception as e:
-#                 print('Ошибка при распознавании голоса')
-#                 print(e)
-#                 self.signals.result.emit("Статус: Ошибка при распознавании голоса")
-#                 self.print_signal.result.emit(str(e))
-#             else:
-#                 print("Распознавание прошло успешно")
-#                 self.signals.result.emit("Статус: Распознавание прошло успешно")
-#         # file.extract_image()
-#         name = file.filename[:file.filename.index('.')]
-#         self.signals.result.emit("Статус: Выполняется обработка текста")
-#         text_to_sum = Text(name, file.chapters)
-#         try:
-#             text_to_sum.sent_summary()
-#             text_to_sum.sumy_sum()
-#             # # text_to_sum.text_rank()
-#             # text_to_sum.compare_sum()
-#         except Exception as e:
-#             self.signals.result.emit('Статус: Ошибка во время обработки текста ')
-#             self.print_signal.result.emit(str(e))
-#             print(e)
-#         # text_to_sum.add_data_export('dataset.csv')
-#         else:
-#             self.signals.result.emit("Статус: Работа завершена")
-#             self.print_signal.result.emit(f"Конспекты для видео \"{text_to_sum.name}\" сохранены. Пожалуйста, проверьте директорию файла")
+class Main(QRunnable):
+    def __init__(self, signal, link, set_videoname_signal, print_signal):
+        super().__init__()
+        self.signals = signal
+        self.video = set_videoname_signal
+        self.print_signal = print_signal
+        self.link = link.strip('"')
 
-# def start_process(link):
-#     # links = [  # 'https://vk.com/video-51126445_456243401',
-#     #     'https://www.youtube.com/watch?v=k9wK2FThEsk&t',
-#     #     'https://www.youtube.com/watch?v=I_ReFF3qiQ8',
-#     #     # 'https://www.youtube.com/watch?v=jR6x5PmBL2I',
-#     #     #  'https://www.youtube.com/watch?v=6dYPBA7-1Wg',
-#     #     #   'https://www.youtube.com/watch?v=ML5tP8m6SHw',
-#     #     #    'https://www.youtube.com/watch?v=k9 wK2FThEsk&t'
-#     # ]
-#     # for link in links:
+    def run(self):
+        try:
+            work_root = Path(__file__).resolve().parent / "runs"
+            work_root.mkdir(exist_ok=True)
+
+            self.signals.result.emit("Статус: Подготовка входного видео")
+            source_video = audio.resolve_input(self.link, work_root)
+            run_dir = work_root / source_video.stem
+            run_dir.mkdir(exist_ok=True)
+            self.video.result.emit(source_video.stem)
+
+            self.signals.result.emit("Статус: 1/7 Разделение аудио и видео")
+            assets = audio.split_audio_video(source_video, run_dir)
+
+            self.signals.result.emit("Статус: 2/7 Распознавание голоса")
+            transcript_path = run_dir / "transcript.txt"
+            self._transcribe(assets.audio_wav, transcript_path)
+
+            self.signals.result.emit("Статус: 3/7 Отбор ключевых кадров")
+            frames_dir = run_dir / "keyframes"
+            keyframes = select_keyframes(str(assets.local_video), str(frames_dir), sample_fps=1.0)
+            frame_paths = [Path(p) for _, p in keyframes]
+
+            self.signals.result.emit("Статус: 4/7 Определение ключевых точек слайдов")
+            keypoints = detect_keypoints_for_images(frame_paths)
+            keypoints_path = run_dir / "keypoints.json"
+            keypoints_path.write_text(json.dumps(keypoints, ensure_ascii=False, indent=2), encoding="utf-8")
+
+            self.signals.result.emit("Статус: 5/7 Обрезка кадров по ключевым точкам")
+            cropped = self._crop_frames_by_keypoints(frame_paths, keypoints, run_dir / "cropped")
+
+            self.signals.result.emit("Статус: 6/7 OCR")
+            ocr_path = run_ocr(cropped, run_dir / "ocr")
+
+            self.signals.result.emit("Статус: 7/7 Абстрактивная суммаризация")
+            summary = summarize_with_llm(
+                transcript_path.read_text(encoding="utf-8") + "\n\n" + ocr_path.read_text(encoding="utf-8")
+            )
+            summary_path = save_summary(summary, run_dir / "summary.md")
+
+            self.signals.result.emit("Статус: Работа завершена")
+            self.print_signal.result.emit(f"Готово: {summary_path}")
+        except Exception as exc:
+            self.signals.result.emit("Статус: Ошибка")
+            self.print_signal.result.emit(str(exc))
+
+    def _transcribe(self, audio_path: Path, out_path: Path):
+        model = WhisperModel("small", device="cpu", compute_type="int8")
+        segments, _ = model.transcribe(str(audio_path), beam_size=5, language="ru")
+        with out_path.open("w", encoding="utf-8") as f:
+            for seg in segments:
+                f.write(f"[{seg.start:.2f}-{seg.end:.2f}] {seg.text.strip()}\n")
+
+    def _crop_frames_by_keypoints(self, frame_paths, keypoints_map, out_dir: Path):
+        out_dir.mkdir(parents=True, exist_ok=True)
+        cropped_paths = []
+        for frame_path in frame_paths:
+            frame = cv2.imread(str(frame_path))
+            if frame is None:
+                continue
+            meta = keypoints_map.get(str(frame_path))
+            if not meta:
+                continue
+            x1, y1, x2, y2 = meta["bbox"]
+            crop = frame[y1:y2, x1:x2]
+            out_path = out_dir / frame_path.name
+            cv2.imwrite(str(out_path), crop)
+            cropped_paths.append(out_path)
+        return cropped_paths
