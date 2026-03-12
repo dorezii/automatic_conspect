@@ -1,0 +1,41 @@
+{% load static %}
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}Automatic Conspect{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+  <header class="nav">
+    <div class="container nav-inner">
+      <div class="brand">Automatic Conspect</div>
+      <nav class="nav-links">
+        <a class="btn" href="/">Публичные конспекты</a>
+        {% if user.is_authenticated %}
+          <a class="btn" href="/dashboard/">Личный кабинет</a>
+          <a class="btn btn-primary" href="/upload/">Загрузить видео</a>
+          <form method="post" action="/accounts/logout/">{% csrf_token %}<button class="btn" type="submit">Выйти</button></form>
+        {% else %}
+          <a class="btn" href="/accounts/login/">Вход</a>
+          <a class="btn btn-primary" href="/signup/">Регистрация</a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="container">
+      {% if messages %}
+        <ul class="alerts">
+          {% for message in messages %}
+            <li class="alert {% if message.tags %}{{ message.tags }}{% endif %}">{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+</body>
+</html>

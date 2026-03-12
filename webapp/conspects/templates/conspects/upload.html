@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}Загрузка видео — Automatic Conspect{% endblock %}
+{% block content %}
+<section class="card" style="max-width:680px;">
+  <h2>Загрузка видео</h2>
+  <p class="muted">Лимит: 1 конспект в день на пользователя.</p>
+  <form method="post" enctype="multipart/form-data">{% csrf_token %}
+    {{ form.as_p }}
+    <button class="btn btn-primary" type="submit">Запустить обработку</button>
+  </form>
+</section>
+{% endblock %}

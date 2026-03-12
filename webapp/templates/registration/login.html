@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}Вход — Automatic Conspect{% endblock %}
+{% block content %}
+<section class="card" style="max-width:520px;margin:auto;">
+  <h2>Вход</h2>
+  <p class="muted">Войдите, чтобы загружать видео и смотреть личные конспекты.</p>
+  <form method="post">{% csrf_token %}
+    {{ form.as_p }}
+    <button class="btn btn-primary" type="submit">Войти</button>
+  </form>
+</section>
+{% endblock %}

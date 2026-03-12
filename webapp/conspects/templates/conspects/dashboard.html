@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Личный кабинет — Automatic Conspect{% endblock %}
+{% block content %}
+<section class="card">
+  <h2>Личный кабинет</h2>
+  <p class="muted">Ваши конспекты и статус отправки на email.</p>
+  <ul class="list">
+    {% for item in items %}
+      <li class="list-item">
+        <a href="/summary/{{ item.id }}/"><strong>{{ item.title }}</strong></a>
+        <div class="meta">
+          <span class="badge">Создан: {{ item.created_at|date:"d.m.Y H:i" }}</span>
+          <span class="badge">Email: {% if item.email_sent %}отправлен{% else %}не отправлен{% endif %}</span>
+          <span class="badge">Рейтинг: {{ item.avg_rating|default:'нет' }}</span>
+        </div>
+      </li>
+    {% empty %}
+      <li class="list-item">Пока нет конспектов.</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endblock %}
