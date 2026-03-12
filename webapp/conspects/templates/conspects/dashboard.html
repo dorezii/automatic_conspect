@@ -1,17 +1,22 @@
 {% extends 'base.html' %}
+{% block title %}Личный кабинет — Automatic Conspect{% endblock %}
 {% block content %}
-<h2>Личный кабинет</h2>
-<p>Ваши конспекты:</p>
-<ul>
-{% for item in items %}
-  <li>
-    <a href="/summary/{{ item.id }}/">{{ item.title }}</a>
-    — {{ item.created_at }}
-    — email: {{ item.email_sent }}
-    — рейтинг: {{ item.avg_rating|default:'нет' }}
-  </li>
-{% empty %}
-  <li>Пока нет конспектов</li>
-{% endfor %}
-</ul>
+<section class="card">
+  <h2>Личный кабинет</h2>
+  <p class="muted">Ваши конспекты и статус отправки на email.</p>
+  <ul class="list">
+    {% for item in items %}
+      <li class="list-item">
+        <a href="/summary/{{ item.id }}/"><strong>{{ item.title }}</strong></a>
+        <div class="meta">
+          <span class="badge">Создан: {{ item.created_at|date:"d.m.Y H:i" }}</span>
+          <span class="badge">Email: {% if item.email_sent %}отправлен{% else %}не отправлен{% endif %}</span>
+          <span class="badge">Рейтинг: {{ item.avg_rating|default:'нет' }}</span>
+        </div>
+      </li>
+    {% empty %}
+      <li class="list-item">Пока нет конспектов.</li>
+    {% endfor %}
+  </ul>
+</section>
 {% endblock %}

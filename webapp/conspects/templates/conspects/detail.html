@@ -1,17 +1,28 @@
 {% extends 'base.html' %}
+{% block title %}{{ item.title }} — Automatic Conspect{% endblock %}
 {% block content %}
-<h2>{{ item.title }}</h2>
-<p>Посещений: {{ item.visits }} | Скачиваний: {{ item.downloads }}</p>
-<p><a href="/summary/{{ item.id }}/download/">Скачать .txt</a></p>
-<pre>{{ item.summary_text }}</pre>
+<section class="grid">
+  <article class="card">
+    <h2>{{ item.title }}</h2>
+    <div class="meta">
+      <span class="badge">Посещений: {{ item.visits }}</span>
+      <span class="badge">Скачиваний: {{ item.downloads }}</span>
+    </div>
+    <p><a class="btn" href="/summary/{{ item.id }}/download/">Скачать .txt</a></p>
+    <pre>{{ item.summary_text }}</pre>
+  </article>
 
-{% if user.is_authenticated %}
-<h3>Оценить качество (1-5)</h3>
-<form method="post">{% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Сохранить отзыв</button>
-</form>
-{% else %}
-<p>Чтобы оставить отзыв, войдите в аккаунт.</p>
-{% endif %}
+  <aside class="card">
+    <h3>Оценка качества</h3>
+    {% if user.is_authenticated %}
+      <p class="muted">Поставьте оценку от 1 до 5.</p>
+      <form method="post">{% csrf_token %}
+        {{ form.as_p }}
+        <button class="btn btn-primary" type="submit">Сохранить отзыв</button>
+      </form>
+    {% else %}
+      <p class="muted">Чтобы оставить отзыв, войдите в аккаунт.</p>
+    {% endif %}
+  </aside>
+</section>
 {% endblock %}
